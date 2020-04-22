@@ -1,0 +1,19 @@
+{
+  "schema": "1.0",
+  "type": "whmcs-servers",
+  "name": "time4vps",
+  "license": "proprietary",
+  "category": "vpscloud",
+  "description": {
+    "name": "Time4VPS Reseller Module",
+    "tagline": "",
+    "long": ""
+  },
+  "support": "https://www.time4vps.com",
+  "authors": [
+    {
+      "name": "Time4VPS",
+      "homepage": "https:\/\/www.time4vps.com"
+    }
+  ]
+}

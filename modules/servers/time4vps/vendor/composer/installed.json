@@ -1,0 +1,49 @@
+[
+    {
+        "name": "time4vps/lib",
+        "version": "v1.0.0",
+        "version_normalized": "1.0.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/time4vps/time4vps-lib.git",
+            "reference": "df901964fe737da0db91bc92399a3e16fba34988"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/time4vps/time4vps-lib/zipball/df901964fe737da0db91bc92399a3e16fba34988",
+            "reference": "df901964fe737da0db91bc92399a3e16fba34988",
+            "shasum": ""
+        },
+        "require": {
+            "ext-curl": "*",
+            "ext-json": "*",
+            "php": ">=7.0"
+        },
+        "time": "2020-04-22T12:18:43+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Time4VPS\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Algirdas Čičinskas",
+                "email": "algirdas.c@iv.lt"
+            }
+        ],
+        "description": "UserAPI library for Time4VPS Hosting provider.",
+        "homepage": "https://www.time4vps.com/",
+        "keywords": [
+            "api",
+            "hosting",
+            "time4vps",
+            "vps"
+        ]
+    }
+]
