@@ -15,7 +15,7 @@ This is Time4VPS provisioning module for WHMCS platform.
 	- Hostname: `billing.time4vps.com`
 	- Type: `Time4VPS Reseller Module`
 	- Set your Time4VPS username and password accordingly
-7. Create DB tables and import all products by navigating to `http://<your whmcs url>/modules/servers/time4vps/import.php` as Admin. If you wish to re-import or delete all Time4VPS product, add parameter `?truncate` to mentioned URL.
+7. Create DB tables and import all products by navigating to `http://<your whmcs url>/modules/servers/time4vps/import.php` as Admin. If you wish to re-import or delete all Time4VPS products, add parameter `?truncate` to mentioned URL.
   
 ## License  
 [MIT](https://github.com/time4vps/time4vps-lib/blob/master/LICENSE)
