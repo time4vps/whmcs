@@ -12,6 +12,51 @@ if (!$_SESSION['adminid']) {
     die('Access denied');
 }
 
+/** Disable "Configure Server" on order page */
+$tpl_path = ROOTPATH . "/templates/orderforms/standard_cart/configureproduct.tpl";
+$tpl = file_get_contents($tpl_path);
+
+// Make a copy
+$tpl_path_copy = $tpl_path . '.orig.tpl';
+if (!file_exists($tpl_path_copy)) {
+    file_put_contents($tpl_path_copy, $tpl);
+
+    // Change fields
+    $repl = '$1 && $productinfo.module eq "time4vps"}' . PHP_EOL;
+    $repl .= "\t\t\t\t" . '<input type="hidden" name="hostname" value="servername.yourdomain.com" />' . PHP_EOL;
+    $repl .= "\t\t\t\t" . '<input type="hidden" name="rootpw" value="rootpwd" />' . PHP_EOL;
+    $repl .= "\t\t\t\t" . '<input type="hidden" name="ns1prefix" value="ns1" />' . PHP_EOL;
+    $repl .= "\t\t\t\t" . '<input type="hidden" name="ns2prefix" value="ns2" />' . PHP_EOL;
+    $repl .= "\t\t\t" . '{else $1 && $productinfo.module neq "time4vps"}' . PHP_EOL;
+
+    $tpl = preg_replace('/(if \$productinfo\.type eq "server")}/', $repl, $tpl);
+    file_put_contents($tpl_path, $tpl);
+}
+/** Backwards compatability */
+if (Capsule::schema()->hasTable('sm_time4vps')) {
+    Capsule::schema()
+        ->table('sm_time4vps', function ($table) {
+            /** @var $table Object */
+            $table->text('details')->nullable();
+            $table->timestamp('details_updated')->nullable();
+        })
+        ->rename('sm_time4vps', TIME4VPS_TABLE);
+}
+
+/** Create service ID maping table */
+if (!Capsule::schema()->hasTable(TIME4VPS_TABLE)) {
+    Capsule::schema()->create(
+        TIME4VPS_TABLE,
+        function ($table) {
+            /** @var $table Object */
+            $table->integer('service_id')->unique();
+            $table->integer('external_id')->index();
+            $table->text('details')->nullable();
+            $table->timestamp('details_updated')->nullable();
+        }
+    );
+}
+
 if ($_GET['truncate']) {
 
     // Delete components
