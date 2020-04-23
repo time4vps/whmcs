@@ -4,7 +4,7 @@
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
-define('TIME4VPS_TABLE', 'mod_time4vps');
+require 'defines.php';
 
 use Time4VPS\API\Product;
 use Time4VPS\API\Script;

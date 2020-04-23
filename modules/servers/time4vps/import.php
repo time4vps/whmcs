@@ -2,8 +2,7 @@
 /** @noinspection PhpUndefinedNamespaceInspection */
 /** @noinspection PhpUndefinedClassInspection */
 
-define('ROOTPATH', dirname(dirname(dirname(dirname(__FILE__) . '../') . '../') . '../'));
-
+require 'defines.php';
 require ROOTPATH . '/init.php';
 
 use WHMCS\Database\Capsule;
@@ -12,14 +11,16 @@ if (!$_SESSION['adminid']) {
     die('Access denied');
 }
 
-/** Disable "Configure Server" on order page */
-$tpl_path = ROOTPATH . "/templates/orderforms/standard_cart/configureproduct.tpl";
-$tpl = file_get_contents($tpl_path);
+if (!Capsule::schema()->hasTable(TIME4VPS_TABLE)) {
+    /** Disable "Configure Server" on order page */
+    $tpl_path = ROOTPATH . "/templates/orderforms/standard_cart/configureproduct.tpl";
+    $tpl = file_get_contents($tpl_path);
 
-// Make a copy
-$tpl_path_copy = $tpl_path . '.orig.tpl';
-if (!file_exists($tpl_path_copy)) {
-    file_put_contents($tpl_path_copy, $tpl);
+    // Make a copy
+    $tpl_path_copy = $tpl_path . '.orig.tpl';
+    if (!file_exists($tpl_path_copy)) {
+        file_put_contents($tpl_path_copy, $tpl);
+    }
 
     // Change fields
     $repl = '$1 && $productinfo.module eq "time4vps"}' . PHP_EOL;
@@ -34,13 +35,20 @@ if (!file_exists($tpl_path_copy)) {
 }
 /** Backwards compatability */
 if (Capsule::schema()->hasTable('sm_time4vps')) {
-    Capsule::schema()
-        ->table('sm_time4vps', function ($table) {
-            /** @var $table Object */
-            $table->text('details')->nullable();
-            $table->timestamp('details_updated')->nullable();
-        })
-        ->rename('sm_time4vps', TIME4VPS_TABLE);
+    try {
+        Capsule::schema()
+            ->table('sm_time4vps', function ($table) {
+                /** @var $table Object */
+                $table->text('details')->nullable();
+                $table->timestamp('details_updated')->nullable();
+            });
+    } catch (PDOException $e) {
+        // Column already exists
+        if ($e->getCode() !== '42S21') {
+            throw $e;
+        }
+    }
+    Capsule::schema()->rename('sm_time4vps', TIME4VPS_TABLE);
 }
 
 /** Create service ID maping table */
