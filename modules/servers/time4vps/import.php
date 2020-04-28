@@ -84,6 +84,9 @@ if ($_GET['truncate']) {
 
     // Config options
     Capsule::table('tblhostingconfigoptions')->truncate();
+
+    echo 'Products truncated';
+
     exit;
 }
 
@@ -212,3 +215,5 @@ foreach ($products as $product) {
             'configoption5' => json_encode($component_map, JSON_PRETTY_PRINT)
         ]);
 }
+
+echo 'Products imported successfully';
