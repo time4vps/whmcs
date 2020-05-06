@@ -35,15 +35,19 @@ class Order extends Endpoint
     /**
      * Order new product
      *
-     * @param int $product_id
-     * @param null $domain
+     * @param int $product_id Product ID
+     * @param null|string $domain Domain name (use serverhost.name for whitelabel domain)
+     * @param string $cycle Billing period symbol (m - monthly, q - quarterly, s - semiannually, a - annually, b - biennially)
+     * @param array $custom Additional options data available for sop products
      * @return array
      * @throws APIException|AuthException
      */
-    public function create($product_id, $domain = null)
+    public function create($product_id, $domain = null, $cycle = 'm', $custom = [])
     {
         return $this->post("/{$product_id}", [
-            'domain' => $domain
+            'domain' => $domain,
+            'cycle' => $cycle,
+            'custom' => $custom
         ]);
     }
 }

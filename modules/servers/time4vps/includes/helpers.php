@@ -4,6 +4,7 @@
 /** @noinspection PhpUndefinedFunctionInspection */
 
 use Time4VPS\API\Server;
+use Time4VPS\API\Service;
 use Time4VPS\Base\Endpoint;
 use WHMCS\Database\Capsule;
 
@@ -88,4 +89,65 @@ function time4vps_Redirect($url)
 {
     header("Location: {$url}");
     exit();
+}
+
+/**
+ * Extract billing cycle
+ *
+ * @param $cycle
+ * @return string
+ */
+function time4vps_BillingCycle($cycle)
+{
+    switch ($cycle) {
+        case 'Monthly':
+            return 'm';
+        case 'Quarterly':
+            return 'q';
+        case 'Semi-Annually':
+            return 's';
+        case 'Annually':
+            return 'a';
+        case 'Biennially':
+            return 'b';
+    }
+
+    return null;
+}
+
+/**
+ * Extract package options from params
+ *
+ * @param $params
+ * @param bool $skip_disabled
+ * @return array
+ */
+function time4vps_ExtractComponents($params, $skip_disabled = true)
+{
+    $custom = [];
+    $map = json_decode($params['configoption5'], true);
+    if ($params['configoptions'] && $map['components']) {
+        foreach ($params['configoptions'] as $configoption => $enabled) {
+            if (!$enabled && $skip_disabled) {
+                continue;
+            }
+
+            $option = Capsule::table('tblproductconfigoptions')
+                ->select('tblproductconfigoptions.id')
+                ->join('tblproductconfiggroups', 'tblproductconfiggroups.id', '=', 'tblproductconfigoptions.gid')
+                ->join('tblproductconfiglinks', 'tblproductconfiglinks.gid', '=', 'tblproductconfiggroups.id')
+                ->where('tblproductconfiglinks.pid', $params['pid'])
+                ->where('tblproductconfigoptions.optionname', $configoption)
+                ->first();
+
+            if (!$option || empty($map['components'][$option->id])) {
+                continue;
+            }
+
+            $component = $map['components'][$option->id];
+            $custom[$component['category_id']][$component['item_id']] = $enabled;
+        }
+    }
+
+    return $custom;
 }

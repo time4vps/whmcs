@@ -31,48 +31,19 @@ function time4vps_CreateAccount($params)
     $product_id = $params['configoption1'];
 
     try {
-        /** @var Order $order */
         $order = new Order();
-        $order = $order->create($product_id, 'serverhost.name');
+        $order = $order->create($product_id, 'serverhost.name', time4vps_BillingCycle($params['model']['billingcycle']), time4vps_ExtractComponents($params));
 
-        /** @var Service $service */
-        $service = new Service();
-        $service_id = $service->fromOrder($order['order_num']);
+        $service_id = (new Service())->fromOrder($order['order_num']);
 
         Capsule::table(TIME4VPS_TABLE)->insert([
             'external_id' => $service_id,
             'service_id' => $params['serviceid'],
             'details_updated' => null
         ]);
-
-        /** Add components */
-        $map = json_decode($params['configoption5'], true);
-        if ($params['configoptions'] && $map['components']) {
-            foreach ($params['configoptions'] as $configoption => $enabled) {
-
-                if (!$enabled) {
-                    continue;
-                }
-
-                $option = Capsule::table('tblproductconfigoptions')
-                    ->join('tblproductconfiggroups', 'tblproductconfiggroups.id', '=', 'tblproductconfigoptions.gid')
-                    ->join('tblproductconfiglinks', 'tblproductconfiglinks.gid', '=', 'tblproductconfiggroups.id')
-                    ->where('tblproductconfiglinks.id', $params['pid'])
-                    ->where('tblproductconfigoptions', $configoption)
-                    ->first();
-
-                if (!$option) {
-                    continue;
-                }
-
-                //$service->upgrade();
-
-            }
-        }
     } catch (Exception $e) {
-        return "Cannot create account. " . $e->getMessage();
+        return 'Cannot create account. ' . $e->getMessage();
     }
-
     return 'success';
 }
 
@@ -120,43 +91,17 @@ function time4vps_ChangePackage($params)
 
     try {
         $service = new Service($server->id());
-        $upgrades = $service->upgrades();
     } catch (Exception $e) {
         return $e->getMessage();
     }
 
-    $upgrade = [];
+    $details = $server->details();
 
-    // Components
-    $map = json_decode($params['configoption5'], true);
-    if (!empty($map['components']) && !empty($upgrades['resources'])) {
-        $upgrade['resources'] = [];
-
-        $map = array_flip($map['components']);
-        $configoptions = collect(Capsule::table('tblhostingconfigoptions')
-            ->where('relid', $params['serviceid'])
-            ->get())->keyBy('configid');
-
-        foreach ($upgrades['resources'] as $resource) {
-            $resource_id = $resource['id'];
-            foreach ($resource['items'] as $item) {
-                $resource_item_id = $item['id'];
-                $upgrade['resources'][$resource_id][$resource_item_id] = !empty($map[$resource_item_id]) && !empty($configoptions[$map[$resource_item_id]]) ? $configoptions[$map[$resource_item_id]]->qty : 0;
-            }
-        }
+    if ((int) $params['configoption1'] !== (int) $details['package_id']) {
+        $service->orderUpgrade(['package' => $params['configoption1']], time4vps_BillingCycle($params['model']['billingcycle']));
     }
 
-    // Package upgrades
-    if (!empty($upgrades['package'])) {
-        foreach ($upgrades['package'] as $package) {
-            if ((int) $package['id'] === (int) $params['configoption1']) {
-                $upgrade['package'] = $params['configoption1'];
-                break;
-            }
-        }
-    }
-
-    $service->orderUpgrade($upgrade);
+    $service->orderUpgrade(['resources' => time4vps_ExtractComponents($params, false)], time4vps_BillingCycle($params['model']['billingcycle']));
 
     return 'success';
 }
@@ -334,10 +279,11 @@ function time4vps_ResetFirewall($params)
  * Update server details table
  *
  * @param $params
+ * @param bool $force
  * @return array|false
  * @throws APIException
  * @throws AuthException
- * @throws Exception
+ * @throws \Time4VPS\Exceptions\Exception
  */
 function time4vps_GetServerDetails($params, $force = false)
 {
@@ -345,8 +291,6 @@ function time4vps_GetServerDetails($params, $force = false)
 
     $current_details = $row->details ? json_decode($row->details, true) : [];
     $last_update = $row->details_updated ? strtotime($row->details_updated) : null;
-
-    $force = true;
 
     if ($force || !$current_details || !$last_update || $current_details['active_task'] || time() - $last_update > 5 * 60) {
 
