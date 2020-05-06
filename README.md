@@ -16,7 +16,9 @@ This is Time4VPS provisioning module for WHMCS platform.
 	- Type: `Time4VPS Reseller Module`
 	- Set your Time4VPS username and password accordingly
 7. Create DB tables by navigating to `http://<your whmcs url>/modules/servers/time4vps/install.php` as Admin
-8. Import / Update Time4VPS products by navigating to `http://<your whmcs url>/modules/servers/time4vps/update.php` as Admin
+  
+## Product import / update
+Import / Update Time4VPS products by navigating to `http://<your whmcs url>/modules/servers/time4vps/update.php` as Admin
   
 ## License  
 [MIT](https://github.com/time4vps/time4vps-lib/blob/master/LICENSE)
