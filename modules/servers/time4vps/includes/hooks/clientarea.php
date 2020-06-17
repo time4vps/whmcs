@@ -159,6 +159,6 @@ add_hook('ClientAreaSecondarySidebar', 1, function ($sidebar)
 
 add_hook('ClientAreaFooterOutput', 1, function ($params) {
     if ($params['module'] === 'time4vps' && $params['action'] === 'productdetails') {
-        return '<script type="text/javascript" src="/modules/servers/time4vps/assets/js/clientarea.js"></script>';
+        return '<script type="text/javascript" src="modules/servers/time4vps/assets/js/clientarea.js"></script>';
     }
 });
