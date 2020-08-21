@@ -4,7 +4,6 @@
 /** @noinspection PhpUndefinedFunctionInspection */
 
 use Time4VPS\API\Server;
-use Time4VPS\API\Service;
 use Time4VPS\Base\Endpoint;
 use WHMCS\Database\Capsule;
 
@@ -33,7 +32,7 @@ function time4vps_InitAPI($params)
  *
  * @param $params
  * @return Server|false External server ID or false
- * @throws \Time4VPS\Exceptions\Exception
+ * @throws Exception
  */
 function time4vps_ExtractServer($params)
 {
@@ -42,9 +41,16 @@ function time4vps_ExtractServer($params)
         return new Server($server->external_id);
     }
 
-    return false;
+    throw new Exception('Unable to find related server');
 }
 
+/**
+ * Get component ID by it's name
+ *
+ * @param string $name
+ * @param int $pid
+ * @return object|null
+ */
 function time4vps_GetComponentIdByName($name, $pid)
 {
     $component = Capsule::table('tblproductconfigoptions')

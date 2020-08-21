@@ -107,7 +107,8 @@ function time4vps_ClientAreaChangePTR($params, $details)
     try {
         time4vps_InitAPI($params);
         $server = time4vps_ExtractServer($params);
-        $ips = array_shift($server->additionalIPs());
+        $ips = $server->additionalIPs();
+        $ips = array_shift($ips);
     } catch (Exception $e) {
         $error = $e->getMessage();
     }

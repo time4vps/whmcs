@@ -22,11 +22,9 @@ function time4vps_CreateAccount($params)
 
     try {
         if ($server = time4vps_ExtractServer($params)) {
-            throw new Exception('Service is already created');
+            return 'Service is already created';
         }
-    } catch (Exception $e) {
-        return $e->getMessage();
-    }
+    } catch (Exception $e) { }
 
     $product_id = $params['configoption1'];
 
@@ -281,9 +279,7 @@ function time4vps_ResetFirewall($params)
  * @param $params
  * @param bool $force
  * @return array|false
- * @throws APIException
- * @throws AuthException
- * @throws \Time4VPS\Exceptions\Exception
+ * @throws Exception
  */
 function time4vps_GetServerDetails($params, $force = false)
 {
@@ -299,10 +295,6 @@ function time4vps_GetServerDetails($params, $force = false)
         time4vps_InitAPI($params);
 
         $server = time4vps_ExtractServer($params);
-
-        if (!$server) {
-            throw new Exception('Server does not exist');
-        }
 
         // Update service details
         $service = (new Service($server->id()))->details();
