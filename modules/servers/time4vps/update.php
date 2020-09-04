@@ -7,6 +7,8 @@ require ROOTPATH . '/init.php';
 
 use WHMCS\Database\Capsule;
 
+session_start();
+
 if (!$_SESSION['adminid']) {
     die('Access denied');
 }
@@ -196,14 +198,14 @@ foreach ($products as $product) {
                 'category_id' => $component['category_id']
             ];
         }
-    }
 
-    /** Update component map */
-    Capsule::table('tblproducts')
-        ->where(['id' => $p->id])
-        ->update([
-            'configoption5' => json_encode($component_map, JSON_PRETTY_PRINT)
-        ]);
+        /** Update component map */
+        Capsule::table('tblproducts')
+            ->where(['id' => $p->id])
+            ->update([
+                'configoption5' => json_encode($component_map, JSON_PRETTY_PRINT)
+            ]);
+    }
 }
 
 /** Set product upgrades */

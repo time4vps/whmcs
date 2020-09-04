@@ -5,8 +5,6 @@
 
 use Time4VPS\API\Order;
 use Time4VPS\API\Service;
-use Time4VPS\Exceptions\APIException;
-use Time4VPS\Exceptions\AuthException;
 use WHMCS\Database\Capsule;
 
 /**
