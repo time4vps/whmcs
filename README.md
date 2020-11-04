@@ -1,4 +1,5 @@
 
+
 # WHMCS Time4VPS Module  
   
 This is Time4VPS provisioning module for WHMCS platform.   
@@ -18,7 +19,7 @@ This is Time4VPS provisioning module for WHMCS platform.
 7. Create DB tables by navigating to `http://<your whmcs url>/modules/servers/time4vps/install.php` as Admin
   
 ## Product import / update
-Import / Update Time4VPS products by navigating to `http://<your whmcs url>/modules/servers/time4vps/update.php` as Admin
+Import / Update Time4VPS products by navigating to `http://<your whmcs url>/modules/servers/time4vps/update.php` as Admin. **Run it once, as every other request will reset any changes you made for existing Time4VPS products.**
   
 ## License  
 [MIT](https://github.com/time4vps/time4vps-lib/blob/master/LICENSE)
