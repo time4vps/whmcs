@@ -50,6 +50,16 @@ add_hook('ClientAreaPrimarySidebar', 1, function ($sidebar) {
     );
 
     $actions->addChild(
+        'actionsMenuManualServiceRenewItem', [
+            'name' => 'Manual Service Renew',
+            'label' => Lang::trans('Manual Service Renew'),
+            'uri' => "clientarea.php?action=productdetails&id={$id}&act=ManualServiceRenew",
+            'order' => 1,
+            'icon' => 'fa-wallet'
+        ]
+    );
+
+    $actions->addChild(
         'actionsMenuChangeHostnameItem', [
             'name' => 'Change Hostname',
             'label' => Lang::trans('Change Hostname'),

@@ -1,6 +1,7 @@
 <?php
 /** @noinspection PhpUndefinedFunctionInspection */
 /** @noinspection PhpUndefinedNamespaceInspection */
+
 /** @noinspection PhpUndefinedClassInspection */
 
 use Time4VPS\API\Order;
@@ -22,13 +23,14 @@ function time4vps_CreateAccount($params)
         if ($server = time4vps_ExtractServer($params)) {
             return 'Service is already created';
         }
-    } catch (Exception $e) { }
+    } catch (Exception $e) {
+    }
 
     $product_id = $params['configoption1'];
 
     try {
         $order = new Order();
-        $order = $order->create($product_id, 'serverhost.name', time4vps_BillingCycle($params['model']['billingcycle']), time4vps_ExtractComponents($params));
+        $order = $order->create($product_id, 'serverhost.name', time4vps_BillingCycle($params['model']['billingcycle']), time4vps_ExtractComponents($params), $params['configoption4']);
 
         $service_id = (new Service())->fromOrder($order['order_num']);
 
@@ -93,7 +95,7 @@ function time4vps_ChangePackage($params)
 
     $details = $server->details();
 
-    if ((int) $params['configoption1'] !== (int) $details['package_id']) {
+    if ((int)$params['configoption1'] !== (int)$details['package_id']) {
         $service->orderUpgrade(['package' => $params['configoption1']], time4vps_BillingCycle($params['model']['billingcycle']));
     }
 

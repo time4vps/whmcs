@@ -60,11 +60,11 @@ function time4vps_ConfigOptions()
             "Description" => "OS list visible to customer (each in new line)",
             "SimpleMode" => true
         ],
-        "configoption4" => [
-            "FriendlyName" => "configoption4",
+        "promo_code" => [
+            "FriendlyName" => "Promotion code",
             "Type" => "textarea",
-            "SimpleMode" => false,
-            "Description" => "Placeholder for future options"
+            "SimpleMode" => true,
+            "Description" => "Promotion code"
         ],
         "component_map" => [
             "FriendlyName" => "Component Map",

@@ -21,7 +21,6 @@ function time4vps_ParseClientAreaRequest($params)
     if ($details['active_task'] && !in_array($action, ['UsageGraph', 'UsageGraphs', 'UsageHistory'])) {
         return tim4vps_ClientAreaServerBusy($details);
     }
-
     if ($action) {
         return call_user_func("time4vps_ClientArea{$action}", $params, $details);
     }
@@ -135,7 +134,7 @@ function time4vps_ClientAreaReboot($params)
     $error = null;
 
     if (!empty($_POST['confirm'])) {
-        $error =  time4vps_Reboot($params);
+        $error = time4vps_Reboot($params);
         if ($error === 'success') {
             time4vps_MarkServerDetailsObsolete($params);
             time4vps_Redirect(time4vps_ActionLink($params, 'Reboot'));
@@ -173,7 +172,7 @@ function time4vps_ClientAreaResetPassword($params)
     $error = null;
 
     if (!empty($_POST['confirm'])) {
-        $error =  time4vps_ResetPassword($params);
+        $error = time4vps_ResetPassword($params);
         if ($error === 'success') {
             time4vps_MarkServerDetailsObsolete($params);
             time4vps_Redirect(time4vps_ActionLink($params, 'ResetPassword'));
@@ -197,6 +196,175 @@ function time4vps_ClientAreaResetPassword($params)
             'error' => $error
         ]
     ];
+}
+
+/**
+ * Client Area Manual Service Renew
+ *
+ * @param $params
+ * @return array
+ */
+function time4vps_ClientAreaManualServiceRenew($params)
+{
+    $domain = $params['domain'];
+    $unpaidInvoiceIds = getUnpaidInvoiceIds($params['userid']);
+    $unpaidInvoiceId = getCurrentServiceUnpaidInvoiceIds($unpaidInvoiceIds, $domain);
+    if (count($unpaidInvoiceId) !== 0) {
+        return [
+            'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+            'templateVariables' => [
+                'unpaidInvoice' => $unpaidInvoiceId,
+            ]
+        ];
+    }
+    if (empty($_POST['confirm'])) {
+        return [
+            'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+            'templateVariables' => [
+            ]
+        ];
+    } else {
+        $productDetails = getProductDetails($params['userid'], $params['serviceid'], $params['pid']);
+
+        if ($productDetails['result'] !== 'success') {
+            return [
+                'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+                'templateVariables' => [
+                    'error' => 'Something went wrong.'
+                ]
+            ];
+        }
+
+        $newNextDueDate = countNextDueDate($productDetails['products']['product'][0]['billingcycle'], $productDetails['products']['product'][0]['nextduedate']);
+        if ($newNextDueDate === null) {
+            return [
+                'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+                'templateVariables' => [
+                    'error' => 'Something went wrong.'
+                ]
+            ];
+        }
+
+        updateClientProduct($params['serviceid'], $newNextDueDate);
+        $invoiceDescription = $productDetails['products']['product'][0]['name']
+            . ' ' . $productDetails['products']['product'][0]['domain']
+            . ' (' . date("Y-m-d") . ' - ' . $newNextDueDate . ')';
+        $price = $productDetails['products']['product'][0]['firstpaymentamount'];
+        $newInvoice = createInvoice($params['userid'], $invoiceDescription, $price);
+
+        if ($newInvoice['result'] !== 'success') {
+            return [
+                'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+                'templateVariables' => [
+                    'error' => 'Something went wrong.'
+                ]
+            ];
+        }
+        return [
+            'tabOverviewReplacementTemplate' => 'templates/clientarea/pages/manualservicerenew.tpl',
+            'templateVariables' => [
+                'success' => true,
+                'newInvoiceId' => $newInvoice['invoiceid'],
+            ]
+        ];
+    }
+}
+
+function getProductDetails($userId, $serviceId, $productId)
+{
+    $command = 'GetClientsProducts';
+    $postData = array(
+        'clientid' => $userId,
+        'serviceid' => $serviceId,
+        'pid' => $productId,
+        'stats' => true,
+    );
+
+    return localAPI($command, $postData);
+}
+
+function countNextDueDate($billingcycle, $nextDueDate)
+{
+    switch ($billingcycle) {
+        case 'Monthly':
+            $newNextDueDate = strtotime("+1 month", strtotime($nextDueDate));
+            $formatedNextDueDate = date('Y-m-d', $newNextDueDate);
+            return $formatedNextDueDate;
+        case 'Quarterly':
+            $newNextDueDate = strtotime("+3 months", strtotime($nextDueDate));
+            $formatedNextDueDate = date('Y-m-d', $newNextDueDate);
+            return $formatedNextDueDate;
+        case 'Semi-Annually':
+            $newNextDueDate = strtotime("+6 months", strtotime($nextDueDate));
+            $formatedNextDueDate = date('Y-m-d', $newNextDueDate);
+            return $formatedNextDueDate;
+        case 'Annually':
+            $newNextDueDate = strtotime("+1 year", strtotime($nextDueDate));
+            $formatedNextDueDate = date('Y-m-d', $newNextDueDate);
+            return $formatedNextDueDate;
+        case 'Biennially':
+            $newNextDueDate = strtotime("+2 years", strtotime($nextDueDate));
+            $formatedNextDueDate = date('Y-m-d', $newNextDueDate);
+            return $formatedNextDueDate;
+    }
+    return null;
+}
+
+function updateClientProduct($serviceId, $newNextDueDate)
+{
+    $command = 'UpdateClientProduct';
+    $postData = array(
+        'serviceid' => $serviceId,
+        'nextduedate' => $newNextDueDate,
+    );
+    return localAPI($command, $postData);
+}
+
+function createInvoice($userId, $description, $price)
+{
+    $command = 'CreateInvoice';
+    $postData = array(
+        'userid' => $userId,
+        'status' => 'Unpaid',
+        'sendinvoice' => '1',
+        'date' => date("Y-m-d"),
+        'itemdescription1' => $description,
+        'itemamount1' => $price,
+        'itemtaxed1' => true,
+    );
+
+    return localAPI($command, $postData);
+}
+
+function getUnpaidInvoiceIds($userId) {
+    $command = 'GetInvoices';
+    $postData = array(
+        'userid' => $userId,
+        'orderby' => 'invoicenumber',
+        'status' => 'Unpaid'
+    );
+
+    $unpaidInvoices = localAPI($command, $postData);
+    $unpaidInvoiceIds = [];
+    foreach ($unpaidInvoices['invoices']['invoice'] as $invoice) {
+        $unpaidInvoiceIds[] = $invoice['id'];
+    }
+    return $unpaidInvoiceIds;
+}
+
+function getCurrentServiceUnpaidInvoiceIds($unpaidInvoiceIds, $domain) {
+    $currentServiceUnpaidInvoiceIds = [];
+    foreach ($unpaidInvoiceIds as $id) {
+        $command = 'GetInvoice';
+        $postData = array(
+            'invoiceid' => $id,
+        );
+        $invoice = localAPI($command, $postData);
+        if (strpos($invoice['items']['item'][0]['description'], $domain) !== false) {
+            $currentServiceUnpaidInvoiceIds[] = $id;
+        }
+    }
+    return $currentServiceUnpaidInvoiceIds;
 }
 
 /**
